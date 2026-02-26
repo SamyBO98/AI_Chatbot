@@ -65,9 +65,8 @@ class ChatBotAssistant():
 
         return words
 
-    @staticmethod
-    def bag_of_words(words, vocab):
-        return [1 if word in words else 0 for word in vocab]
+    def bag_of_words(self, words):
+        return [1 if word in words else 0 for word in self.vocabulary]
     
     
     def parse_intents(self):
@@ -90,6 +89,20 @@ class ChatBotAssistant():
                     self.documents.append((pattern_words, intent['tag']))
                 #eliminate duplicate
                 self;vocabulary = sorted(set(self.vocabulary))
+    
+    def prepare_data(self):
+        bags = []
+        indices = []
+
+        for document in self.documents:
+            words = document[0]
+            bag = self.bag_of_words(words)
+            intent_index = self.intents.index[document[1]]
+            bag.append(bag)
+            indices.append(intent_index)
+        self.X = np.array(bags)
+        self.y = np.array(indices)
+
 
 
 
