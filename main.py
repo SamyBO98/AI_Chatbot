@@ -39,5 +39,32 @@ class ChatBot(nn.Module):
         #Final decision
         x = self.fc3(x)
 
+class ChatBotAssistant():
+
+    def __init__(self, intents_path, function_mappings=None):
+        self.model = None
+        self.intents_path = intents_path
+        self.documents = []
+        self.vocabulary = []
+        self.intents = []
+        self.intents_responses = []
+        self.function_mappings = function_mappings
+        self.X = None
+        self.y = None
+    
+    @staticmethod
+    def tokenize_and_lemmatize(text):
+        #Get all instance of words
+        # cars -> car
+        # running -> run
+        # better -> good
+        lemattizer = nltk.WordNetLemmatizer()
+        #Split text in tokens
+        words = nltk.word_tokenize(text)
+        words = [lemattizer.lemmatize(word.lower()) for word in words]
+
+        return words
 
 
+chatbot = ChatBotAssistant('intents.json')
+print(chatbot.tokenize_and_lemmatize('Hello world how are you, I am programming in Python today'))
