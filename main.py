@@ -65,13 +65,18 @@ class ChatBotAssistant():
 
         return words
 
+    #self.vocabulary = ["hello", "bye", "thanks"]
+    #words = ["hello", "thanks"]
+    #bag_of_words(words)  # [1, 0, 1]
     def bag_of_words(self, words):
         return [1 if word in words else 0 for word in self.vocabulary]
     
     
     def parse_intents(self):
-        lemmatizer = nltk.WordNetLemmatizer()
+        #reduce words
+        #lemmatizer = nltk.WordNetLemmatizer()
 
+        #Load json
         if(os.path.exists((self.intents_path))):
             with open(self.intents_path, 'r') as f:
                 intents_data = json.load(f)
@@ -79,6 +84,11 @@ class ChatBotAssistant():
             #loop through intents
             #save tag
             #set responses to the tag
+            #self.intents = ["google", "greeting"]
+            #self.intents_responses = {
+            # "google": ["Redirecting to Google..."],
+            # "greeting": ["Hello", "Hi there, how can I help?"]
+            #}
             for intent in intents_data['intents']:
                 if intent['tag'] not in self.intents:
                     self.intents.append(intent['tag'])
@@ -88,8 +98,36 @@ class ChatBotAssistant():
                     self.vocabulary.extend(pattern_words)
                     self.documents.append((pattern_words, intent['tag']))
                 #eliminate duplicate
-                self;vocabulary = sorted(set(self.vocabulary))
+                self.vocabulary = sorted(set(self.vocabulary))
     
+
+
+    #Input
+    #self.vocabulary = ["be", "google", "good", "hello", "hi", "how", "internet", "there", "you"]
+    #self.intents = ["google", "greeting"]
+    #self.documents = [
+        #(["google"], "google"),
+        #(["search"], "google"),
+        #(["internet"], "google"),
+        #(["hi", "there"], "greeting"),
+        #(["how", "be", "you"], "greeting")
+    #]
+    #Output
+    # Pattern "google" → bag_of_words(["google"]) → [0,1,0,0,0,0,0,0,0] → tag "google" → index 0
+    # Pattern "search" → [0,0,0,0,0,0,0,0,0] → index 0
+    # Pattern "internet" → [0,0,0,0,0,0,1,0,0] → index 0
+    # Pattern "hi there" → [0,0,0,0,1,0,0,1,0] → index 1
+    # Pattern "how be you" → [1,0,0,0,0,1,0,0,1] → index 1
+
+    #self.X = np.array([
+    # [0,1,0,0,0,0,0,0,0],  # google
+    # [0,0,0,0,0,0,0,0,0],  # search
+    # [0,0,0,0,0,0,1,0,0],  # internet
+    # [0,0,0,0,1,0,0,1,0],  # hi there
+    # [1,0,0,0,0,1,0,0,1]   # how be you
+    # ])
+    #self.y = np.array([0, 0, 0, 1, 1])
+    #self.X ready for input as data and self.y ready for input as labels
     def prepare_data(self):
         bags = []
         indices = []
@@ -98,10 +136,32 @@ class ChatBotAssistant():
             words = document[0]
             bag = self.bag_of_words(words)
             intent_index = self.intents.index[document[1]]
-            bag.append(bag)
+            bags.append(bag)
             indices.append(intent_index)
         self.X = np.array(bags)
         self.y = np.array(indices)
+
+
+    def train_model(self, batch_size, lr, epochs):
+        X_tensor = torch.tensor(self.X, dtype=torch.float32)
+        y_tensor = torch.tensor(self.y, dtype=torch.long)
+
+        dataset = TensorDataset(X_tensor,y_tensor)
+        loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+
+        self.model=ChatBot(self.X.shape[1], len(self.intents))
+
+        criterion = nn.CrossEntropyLoss()
+        optimizer = optim.Adam(self.model.parameters(), lr=lr)
+
+        for epoch in range(epochs):
+            running_loss = 0.0
+
+            for batch_X, batch_y in loader:
+                optimizer.zero_grad()
+                outputs = self.model(batch_X)
+                loss = criterion(outputs,batch_y)
+
 
 
 
